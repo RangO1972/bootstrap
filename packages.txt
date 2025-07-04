@@ -1,4 +1,5 @@
 sudo
+openssh-server
 ca-certificates
 curl
 wget
