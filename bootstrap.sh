@@ -25,8 +25,13 @@ echo "### Installing all packages..."
 apt-get install -y $(cat "$WORKDIR/packages.txt")
 
 echo "### Creating user stra..."
-useradd -m -s /bin/bash stra
-echo "Set password for stra manually with: passwd stra"
+if id "stra" &>/dev/null; then
+  echo "User stra already exists, skipping creation."
+else
+  echo "### Creating user stra..."
+  useradd -m -s /bin/bash stra
+  echo "Set password for stra manually with: passwd stra"
+fi
 
 usermod -aG sudo stra
 usermod -aG docker stra
