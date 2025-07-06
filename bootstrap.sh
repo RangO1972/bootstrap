@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BASEURL="https://TUO-REPO"
+BASEURL="https://raw.githubusercontent.com/RangO1972/bootstrap/main"
 WORKDIR="/opt/stradcs/bootstrap"
 
 echo "### Creating working directory $WORKDIR..."
