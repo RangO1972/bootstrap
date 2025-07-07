@@ -1,7 +1,5 @@
 sudo
 openssh-server
-ca-certificates
-curl
 wget
 git
 htop
