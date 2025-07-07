@@ -1,6 +1,7 @@
 sudo
 openssh-server
 wget
+systemd-resolved
 git
 htop
 iperf3
