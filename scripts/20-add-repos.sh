@@ -1,20 +1,30 @@
 #!/bin/bash
 set -e
 
-WORKDIR="/opt/stradcs-bootstrap"
-REPOS_FILE="$WORKDIR/repos.sh"
+echo "[20-add-repos] Aggiunta repository Tailscale e Docker..."
 
-echo "[20-add-repos] Aggiunta repository esterni..."
+# Install tools necessari
+apt-get update
+apt-get install -y curl ca-certificates gnupg lsb-release
 
-if [ ! -f "$REPOS_FILE" ]; then
-    echo "❌ File repos.sh non trovato in $WORKDIR"
-    exit 1
-fi
+# === TAILSCALE ===
+echo "[20-add-repos] Aggiungo repository Tailscale..."
+curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list >/dev/null
 
-echo "[20-add-repos] Eseguo i comandi dal file repos.sh..."
-bash "$REPOS_FILE"
+# === DOCKER ===
+echo "[20-add-repos] Aggiungo repository Docker..."
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
 
-echo "[20-add-repos] Repository aggiunti. Eseguo apt-get update..."
+echo \
+"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+$(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update finale
+echo "[20-add-repos] Eseguo apt update finale..."
 apt-get update
 
-echo "[20-add-repos] Completato."
+echo "[20-add-repos] Repositories aggiunti correttamente."
