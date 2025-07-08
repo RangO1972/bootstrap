@@ -1,115 +1,75 @@
 #!/bin/bash
 set -e
 
-WORKDIR="/opt/stradcs-bootstrap"
-CSV="$WORKDIR/interfaces.csv"
-
 echo "### Configuring systemd-networkd interfaces..."
 
-# Pulisci eventuali vecchi file
-rm -f /etc/systemd/network/*.network /etc/systemd/network/*.netdev /etc/systemd/network/*.link
+CSV_FILE="/opt/stradcs-bootstrap/interfaces.csv"
+NETWORK_DIR="/etc/systemd/network"
 
-# Array per i gruppi
-declare -A GROUP_INTERFACES
-declare -A GROUP_ROLES
-declare -A GROUP_ADDRESSES
+mkdir -p "$NETWORK_DIR"
 
-while IFS=, read -r original alias role group address; do
-  [[ "$original" == "OriginalName" ]] && continue
+# Traccia delle interfacce già assegnate
+USED_NICS=()
 
-  # .link
-  cat > "/etc/systemd/network/10-${alias}.link" <<EOF
+get_first_unused_nic() {
+  for nic in $(ls /sys/class/net); do
+    [[ "$nic" == "lo" ]] && continue
+    [[ " ${USED_NICS[*]} " =~ " $nic " ]] && continue
+    USED_NICS+=("$nic")
+    echo "$nic"
+    return
+  done
+}
+
+# Legge il file CSV saltando la prima riga
+tail -n +2 "$CSV_FILE" | while IFS=',' read -r original alias role group; do
+  original=$(echo "$original" | xargs)
+  alias=$(echo "$alias" | xargs)
+  role=$(echo "$role" | xargs | tr '[:upper:]' '[:lower:]')
+  group=$(echo "$group" | xargs)
+
+  [[ -z "$alias" ]] && continue
+
+  if [[ "$original" == "<AUTO>" ]]; then
+    original=$(get_first_unused_nic)
+    echo ">> Assigned '$original' to alias '$alias'"
+  fi
+
+  # Crea file .link
+  cat > "$NETWORK_DIR/10-${alias}.link" <<EOF
 [Match]
-OriginalName=${original}
+OriginalName=$original
 
 [Link]
-Name=${alias}
+Name=$alias
 EOF
 
-  if [[ -z "$group" ]]; then
-    # Interfaccia standalone
-    if [[ "$role" == "dhcp" ]]; then
-      cat > "/etc/systemd/network/20-${alias}.network" <<EOF
+  # Crea file .network
+  case "$role" in
+    dhcp)
+      cat > "$NETWORK_DIR/10-${alias}.network" <<EOF
 [Match]
-Name=${alias}
+Name=$alias
 
 [Network]
 DHCP=yes
 EOF
-    elif [[ "$role" == "static" ]]; then
-      cat > "/etc/systemd/network/20-${alias}.network" <<EOF
+      ;;
+    static)
+      # Lo script 50-configure-static-ip.sh gestirà gli IP statici.
+      cat > "$NETWORK_DIR/10-${alias}.network" <<EOF
 [Match]
-Name=${alias}
+Name=$alias
 
 [Network]
-Address=${address}
+Address=__REPLACE_ME__
 EOF
-    fi
-  else
-    # Interfaccia parte di un bond
-    GROUP_INTERFACES["$group"]+="$alias "
-    # La prima interfaccia definisce il tipo di configurazione
-    if [[ -z "${GROUP_ROLES[$group]}" ]]; then
-      GROUP_ROLES["$group"]="$role"
-      GROUP_ADDRESSES["$group"]="$address"
-    fi
-  fi
-done < "$CSV"
-
-# Creazione dei bond
-for group in "${!GROUP_INTERFACES[@]}"; do
-  members=(${GROUP_INTERFACES[$group]})
-  if (( ${#members[@]} < 2 )); then
-    echo "Skipping bond $group, only 1 interface."
-    continue
-  fi
-
-  primary="${members[0]}"
-  role="${GROUP_ROLES[$group]}"
-  address="${GROUP_ADDRESSES[$group]}"
-
-  echo "Creating bond: $group with members: ${members[*]}"
-
-  # .netdev
-  cat > "/etc/systemd/network/10-bond-${group}.netdev" <<EOF
-[NetDev]
-Name=${group}
-Kind=bond
-
-[Bond]
-Mode=active-backup
-PrimarySlave=${primary}
-EOF
-
-  # .network del bond
-  if [[ "$role" == "dhcp" ]]; then
-    cat > "/etc/systemd/network/20-bond-${group}.network" <<EOF
-[Match]
-Name=${group}
-
-[Network]
-DHCP=yes
-EOF
-  elif [[ "$role" == "static" ]]; then
-    cat > "/etc/systemd/network/20-bond-${group}.network" <<EOF
-[Match]
-Name=${group}
-
-[Network]
-Address=${address}
-EOF
-  fi
-
-  # .network per ogni slave
-  for nic in "${members[@]}"; do
-    cat > "/etc/systemd/network/30-${nic}.network" <<EOF
-[Match]
-Name=${nic}
-
-[Network]
-Bond=${group}
-EOF
-  done
+      ;;
+    ignore)
+      echo "# Skipping $alias (ignored)" ;;
+    *)
+      echo "!! Unknown role '$role' for $alias, skipping..." ;;
+  esac
 done
 
 echo "### Network configuration complete."
