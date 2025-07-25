@@ -10,7 +10,7 @@ export NETWORKD_DIR="/etc/systemd/network"
 export SCRIPTSDIR="$WORKDIR/scripts"
 
 # Installo git
-sudo apt update && sudo apt install -y git
+apt update && apt install -y git
 
 # Clono repository
 git clone "$REPO_URL" "$WORKDIR"
