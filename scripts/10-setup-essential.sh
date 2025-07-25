@@ -12,8 +12,6 @@ apt-get install -y \
     lsb-release \
     git \
     sudo \
-    systemd-networkd \
-    systemd-resolved
 
 echo "[10-setup-essential] Abilitazione e attivazione systemd-networkd e resolved..."
 systemctl enable systemd-networkd.service
