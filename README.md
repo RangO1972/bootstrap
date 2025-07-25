@@ -10,7 +10,7 @@ During installation:
 
 ```text
 Username: stra
-
+```
 
 ✅ Select:
 - **Standard system utilities**
@@ -30,4 +30,4 @@ Username: root
 Password: [your root password]
 
 wget --no-cache -qO- https://tinyurl.com/y2y5b6x7 | bash
-
+```
