@@ -2,7 +2,7 @@
 set -e
 
 # Inizializzazione variabili globali
-REPO_URL="https://github.com/username/repository-name.git"
+REPO_URL="https://github.com/RangO1972/bootstrap.git"
 export WORKDIR="/opt/stradcs-bootstrap"
 export INTERFACE_DIR="$WORKDIR/interfaces"
 export TARGET_USER="stra"
