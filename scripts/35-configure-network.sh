@@ -56,7 +56,6 @@ DHCP=yes
 EOF
       ;;
     static)
-      # Lo script 50-configure-static-ip.sh gestirà gli IP statici.
       cat > "$NETWORK_DIR/10-${alias}.network" <<EOF
 [Match]
 Name=$alias
