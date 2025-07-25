@@ -24,5 +24,5 @@ find "$SCRIPTSDIR" -type f -name "*.sh" -exec chmod +x {} \;
 echo "### Running bootstrap scripts..."
 for script in $(ls $SCRIPTSDIR | sort); do
    echo "### Executing $script..."
-   bash "$WORKDIR/$script"
+   bash "$SCRIPTSDIR/$script"
 done
