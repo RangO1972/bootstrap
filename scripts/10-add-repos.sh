@@ -7,6 +7,10 @@ echo "[20-add-repos] Aggiunta repository Tailscale e Docker..."
 apt-get update
 apt-get install -y curl ca-certificates gnupg lsb-release
 
+echo "[20-add-repos] Aggiungo repository backports..."
+echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware" \
+    > /etc/apt/sources.list.d/backports.list
+    
 # === TAILSCALE ===
 echo "[20-add-repos] Aggiungo repository Tailscale..."
 curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
@@ -26,5 +30,8 @@ tee /etc/apt/sources.list.d/docker.list > /dev/null
 # Update finale
 echo "[20-add-repos] Eseguo apt update finale..."
 apt-get update
+
+echo "[20-add-repos] Installo kernel e header da backports..."
+apt-get install -y -t bookworm-backports linux-image-amd64 linux-headers-amd64
 
 echo "[20-add-repos] Repositories aggiunti correttamente."
