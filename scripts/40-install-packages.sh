@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "### Updating package lists..."
+echo "[40] ### Updating package lists..."
 apt-get update
 
-echo "### Installing packages..."
+echo "[40] Installo kernel e header da backports..."
+apt-get install -y -t bookworm-backports linux-image-amd64 linux-headers-amd64
+
+echo "[40] ### Installing packages..."
 apt-get install -y $(cat /opt/stradcs-bootstrap/configs/packages.txt)
