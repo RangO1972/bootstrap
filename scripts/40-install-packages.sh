@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
+TAG="\033[1;37m[$(basename "$0" .sh)]\033[0m"
 
-echo "[40] ### Updating package lists..."
+echo "$TAG -Updating package lists..."
 apt-get update
 
-echo "[40] Installo kernel e header da backports..."
+echo "$TAG -Installo kernel e header da backports..."
 apt-get install -y -t bookworm-backports linux-image-amd64 linux-headers-amd64
 
-echo "[40] ### Installing packages..."
+echo "$TAG -### Installing packages..."
 apt-get install -y $(cat /opt/stradcs-bootstrap/configs/packages.txt)
