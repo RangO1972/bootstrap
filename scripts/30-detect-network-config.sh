@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
-TAG="\033[1;37m[$(basename "$0" .sh)]\033[0m"
+: "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$WORKDIR/lib/common.sh"
 
-WORKDIR="/opt/stradcs-bootstrap"
 CONFIGDIR="$WORKDIR/interfaces"
 
-echo "$TAG - Detecting hardware..."
+log info "Detecting hardware..."
+
 VENDOR=$(cat /sys/class/dmi/id/sys_vendor | tr -c '[:alnum:]' '_' | tr '[:upper:]' '[:lower:]')
 MODEL=$(cat /sys/class/dmi/id/product_name | tr -c '[:alnum:]' '_' | tr '[:upper:]' '[:lower:]')
 NIC_COUNT=$(ls -1 /sys/class/net | grep -E '^(en|eth)' | wc -l)
@@ -40,7 +41,7 @@ if [[ -z "$MATCHING_FILES" ]]; then
    exit 0
 fi
 
-echo "$TAG - Found configurations:"
+log info "Found configurations:"
 i=1
 declare -A OPTIONS
 for file in $MATCHING_FILES; do
@@ -64,7 +65,7 @@ else
 fi
 
 TEMPLATE="${VENDORDIR}/${NAMEBASE}-$(date +%Y%m%d_%H%M).csv"
-echo "$TAG - Generating template: $TEMPLATE"
+log info "Generating template: $TEMPLATE"
 echo "OriginalName,Alias,Role,Group,Address" > "$TEMPLATE"
 idx=1
 for iface in $(ls /sys/class/net | grep -E '^(en|eth)'); do
@@ -72,4 +73,4 @@ for iface in $(ls /sys/class/net | grep -E '^(en|eth)'); do
    ((idx++))
 done
 
-echo "$TAG - Template created for reference."
+log info "Template created for reference."
