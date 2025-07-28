@@ -1,8 +1,8 @@
-# Debian 12 - Installation and Initial Setup (No GUI)
+# Debian 12 - Installation and Initial Setup (No GUI) --- ""Preliminay""
 
-## 1. Install Debian 12
+## 1. Install Debian 13
 
-Download the official Debian 12 ISO from:  
+Download the official Debian 13 ISO from:  
 👉 https://www.debian.org/distrib/
 
 During installation:
