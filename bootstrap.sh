@@ -18,7 +18,7 @@ if ! command -v git &>/dev/null; then
     echo "Git non trovato. Installo git..."
     apt update && apt install -y git
 else
-    log warning "Git già installato"
+    log warn "Git già installato"
 fi
 
 # Clona repo se necessario
