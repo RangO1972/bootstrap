@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-TAG="\033[1;37m[$(basename "$0" .sh)]\033[0m"
+: "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$WORKDIR/lib/common.sh"
 
 # Controllo variabili richieste
 [ -z "$WORKDIR" ] && echo "WORKDIR non definito" && exit 1
@@ -12,4 +13,4 @@ chown -R "$TARGET_USER:$TARGET_USER" "$WORKDIR"
 # Rende eseguibili tutti gli script shell
 find "$WORKDIR" -type f -name "*.sh" -exec chmod +x {} \;
 
-echo "$TAG - Permessi impostati e proprietà assegnata a $TARGET_USER su $WORKDIR"
+log info "Permessi impostati e proprietà assegnata a $TARGET_USER su $WORKDIR"
