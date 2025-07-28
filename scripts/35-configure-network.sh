@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
-TAG="\033[1;37m[$(basename "$0" .sh)]\033[0m"
 
-echo "$TAG - Configuring systemd-networkd interfaces..."
+: "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$WORKDIR/lib/common.sh"
+
+log info "Configuring systemd-networkd interfaces..."
 
 CSV_FILE="/opt/stradcs-bootstrap/interfaces.csv"
 NETWORK_DIR="/etc/systemd/network"
@@ -72,4 +74,4 @@ EOF
   esac
 done
 
-echo "$TAG - Network configuration complete."
+log info "Network configuration complete."
