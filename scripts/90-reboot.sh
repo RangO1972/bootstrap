@@ -1,16 +1,18 @@
 #!/bin/bash
 set -e
-TAG="\033[1;37m[$(basename "$0" .sh)]\033[0m"
 
-echo "$TAG - Rebooting in 5 seconds..."
+: "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$WORKDIR/lib/common.sh"
+
+log info "Rebooting in 5 seconds..."
 sleep 1
-echo "$TAG - Rebooting in 4 seconds..."
+log info "Rebooting in 4 seconds..."
 sleep 1
-echo "$TAG - Rebooting in 3 seconds..."
+log info "Rebooting in 3 seconds..."
 sleep 1
-echo "$TAG - Rebooting in 2 seconds..."
+log info "Rebooting in 2 seconds..."
 sleep 1
-echo "$TAG - Rebooting in 1 seconds..."
+log info "Rebooting in 1 seconds..."
 sleep 1
-echo "$TAG - Rebooting..."
+log info "Rebooting..."
 reboot
