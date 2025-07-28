@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
-TAG="\033[1;37m[$(basename "$0" .sh)]\033[0m"
+
+: "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$WORKDIR/lib/common.sh"
 
 USER="stra"
 
-echo "$TAG - Creating user $USER..."
+log info "Creating user $USER..."
 
 if id "$USER" >/dev/null 2>&1; then
   echo "User $USER already exists."
@@ -14,8 +16,8 @@ else
   echo "  passwd $USER"
 fi
 
-echo "$TAG - Adding $USER to sudo group..."
+log info "Adding $USER to sudo group..."
 usermod -aG sudo "$USER"
 
-echo "$TAG - Adding $USER to docker group..."
+log info "Adding $USER to docker group..."
 usermod -aG docker "$USER"
