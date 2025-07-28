@@ -11,26 +11,25 @@ export TARGET_USER="stra"
 export NETWORKD_DIR="/etc/systemd/network"
 export SCRIPTSDIR="$WORKDIR/scripts"
 
-# Includi funzioni comuni
-source "$WORKDIR/lib/common.sh"
-
-log info "Inizio bootstrap da $WORKDIR"
+echo "Inizio bootstrap da $WORKDIR"
 
 # Installa Git se non esiste
 if ! command -v git &>/dev/null; then
-    log info "Git non trovato. Installo git..."
+    echo "Git non trovato. Installo git..."
     apt update && apt install -y git
 else
-    log info "Git già installato"
+    log warning "Git già installato"
 fi
 
 # Clona repo se necessario
 if [ ! -d "$WORKDIR/.git" ]; then
-    log info "Clono il repository da $REPO_URL"
+    echo "Clono il repository da $REPO_URL"
     git clone "$REPO_URL" "$WORKDIR"
 else
-    log warn "Repository già presente in $WORKDIR. Salto il clone."
+    echo "Repository già presente in $WORKDIR. Salto il clone."
 fi
+# Includi funzioni comuni
+source "$WORKDIR/lib/common.sh"
 
 # Permessi e chmod
 log info "Imposto permessi nella cartella di lavoro: $WORKDIR"
