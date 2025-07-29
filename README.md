@@ -1,4 +1,4 @@
-# Debian 13 - Installation and Initial Setup (No GUI) --- ""Preliminay""
+# Debian 13 - Installation and Initial Setup (No GUI) --- "Preliminay"
 
 ## 1. Install Debian 13
 
