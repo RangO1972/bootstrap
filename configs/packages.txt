@@ -14,5 +14,4 @@ tcpdump
 nmap
 bmon
 bpfcc-tools
-tailscale
 
