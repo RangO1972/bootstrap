@@ -1,4 +1,4 @@
-# Debian 12 - Installation and Initial Setup (No GUI) --- ""Preliminay""
+# Debian 13 - Installation and Initial Setup (No GUI) --- ""Preliminay""
 
 ## 1. Install Debian 13
 
@@ -34,5 +34,6 @@ reboot
 ## 3. Cleaning
 
 ```bash
+sudo apt autoremove --purge
 sudo apt clean
 ```
