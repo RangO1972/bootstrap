@@ -10,8 +10,8 @@ CSV_FILE="$WORKDIR/interfaces.csv"
 NETWORK_DIR="/etc/systemd/network"
 
 mkdir -p "$NETWORK_DIR"
+log info "Created/verified network configuration directory: $NETWORK_DIR"
 
-# Traccia delle interfacce già assegnate
 USED_NICS=()
 
 get_first_unused_nic() {
@@ -24,22 +24,28 @@ get_first_unused_nic() {
   done
 }
 
-# Legge il file CSV saltando la prima riga
-tail -n +2 "$CSV_FILE" | while IFS=',' read -r original alias role group; do
+log info "Reading configuration from CSV: $CSV_FILE"
+tail -n +2 "$CSV_FILE" | while IFS=',' read -r original alias role group address; do
   original=$(echo "$original" | xargs)
   alias=$(echo "$alias" | xargs)
   role=$(echo "$role" | xargs | tr '[:upper:]' '[:lower:]')
   group=$(echo "$group" | xargs)
+  address=$(echo "$address" | xargs)
 
-  [[ -z "$alias" ]] && continue
+  if [[ -z "$alias" ]]; then
+    log warn "Skipping line with empty alias."
+    continue
+  fi
 
   if [[ "$original" == "<AUTO>" ]]; then
     original=$(get_first_unused_nic)
-    echo ">> Assigned '$original' to alias '$alias'"
+    log info "Auto-assigned NIC '$original' to alias '$alias'"
   fi
 
-  # Crea file .link
-  cat > "$NETWORK_DIR/10-${alias}.link" <<EOF
+  # Creazione file .link
+  LINK_FILE="$NETWORK_DIR/10-${alias}.link"
+  log info "Creating .link file for '$alias' (original: '$original')"
+  cat > "$LINK_FILE" <<EOF
 [Match]
 OriginalName=$original
 
@@ -47,10 +53,11 @@ OriginalName=$original
 Name=$alias
 EOF
 
-  # Crea file .network
+  NETWORK_FILE="$NETWORK_DIR/10-${alias}.network"
   case "$role" in
     dhcp)
-      cat > "$NETWORK_DIR/10-${alias}.network" <<EOF
+      log info "Configuring DHCP for '$alias'"
+      cat > "$NETWORK_FILE" <<EOF
 [Match]
 Name=$alias
 
@@ -59,19 +66,27 @@ DHCP=yes
 EOF
       ;;
     static)
-      cat > "$NETWORK_DIR/10-${alias}.network" <<EOF
+      if [[ -z "$address" || "$address" == "__REPLACE_ME__" ]]; then
+        log warn "No valid address provided for static role on '$alias', placeholder inserted."
+        address="__REPLACE_ME__"
+      fi
+      log info "Configuring STATIC IP for '$alias' → $address"
+      cat > "$NETWORK_FILE" <<EOF
 [Match]
 Name=$alias
 
 [Network]
-Address=__REPLACE_ME__
+Address=$address
 EOF
       ;;
     ignore)
-      echo "# Skipping $alias (ignored)" ;;
+      log info "Ignoring '$alias' as per configuration"
+      ;;
     *)
-      echo "!! Unknown role '$role' for $alias, skipping..." ;;
+      log warn "Unknown role '$role' for alias '$alias', skipping interface"
+      ;;
   esac
 done
 
-log info "Network configuration complete."
+log info "Network interface configuration completed successfully."
+
