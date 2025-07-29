@@ -26,7 +26,7 @@ log() {
         *)     color="\033[1;37m[LOG  ]\033[0m" ;;
     esac
 
-    formatted="[$caller_file] $timestamp [$level] $message"
+    formatted="$timestamp [$level] [$caller_file] $message"
 
     # Stampa a video
     echo -e "\033[1;37m[${caller_file}]\033[0m $timestamp $color $message"
@@ -37,7 +37,9 @@ log() {
 
     # Scrive anche nel journal se disponibile
     if command -v systemd-cat &>/dev/null; then
-        echo "$formatted" | systemd-cat -t "stradcs-bootstrap" -p "${level,,}"
+        formatted2="[$level] [$caller_file] $message"
+
+        echo "$formatted2" | systemd-cat -t "stradcs-bootstrap" -p "${level,,}"
     fi
 
 }
