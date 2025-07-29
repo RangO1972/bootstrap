@@ -19,5 +19,3 @@ fi
 log info "Adding $USER to sudo group..."
 usermod -aG sudo "$USER"
 
-log info "Adding $USER to docker group..."
-usermod -aG docker "$USER"
