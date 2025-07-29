@@ -4,6 +4,10 @@ set -e
 : "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$WORKDIR/lib/common.sh"
 
+
+log info "Install systemd-resolved..."
+apt install -y systemd-resolved
+
 log info "Removing obsolete packages..."
 apt-get remove -y ifupdown ifenslave resolvconf rpcbind nfs-common avahi-daemon at || true
 
