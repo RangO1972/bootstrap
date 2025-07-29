@@ -2,6 +2,13 @@
 
 : "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
+# Crea la directory dei log se non esiste
+LOGDIR="$WORKDIR/logs"
+mkdir -p "$LOGDIR"
+
+# Imposta il file di log con nome del giorno
+LOGFILE="$LOGDIR/$(date +%F).log"
+
 log() {
     local level="$1"
     local message="$2"
@@ -19,5 +26,16 @@ log() {
         *)     color="\033[1;37m[LOG  ]\033[0m" ;;
     esac
 
+    formatted="[$caller_file] $timestamp [$level] $message"
+
+    # Stampa a video
     echo -e "\033[1;37m[${caller_file}]\033[0m $timestamp $color $message"
+
+    # Scrive nel file giornaliero
+    echo "$formatted" >> "$LOGFILE"
+
+    # Scrive anche nel journal se disponibile
+    if command -v systemd-cat &>/dev/null; then
+        echo "$formatted" | systemd-cat -t "$caller_file" -p "${level,,}"
+    fi
 }
