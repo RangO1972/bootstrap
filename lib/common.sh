@@ -40,6 +40,6 @@ log() {
 
     # Invia a systemd-journal (se disponibile)
     if command -v systemd-cat &>/dev/null; then
-        echo "$formatted" | systemd-cat -t "stradcs-bootstrap" -p "$journal_level"
+        echo "[$level] [$caller_file] $message" | systemd-cat -t "stra-install" -p "$journal_level"
     fi
 }
