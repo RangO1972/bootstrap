@@ -9,7 +9,7 @@ log() {
     local caller_file
 
     timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    caller_file=$(basename "${BASH_SOURCE[1]}")
+    caller_file=$(basename "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}")
     caller_file="${caller_file%.sh}"
 
     case "$level" in
