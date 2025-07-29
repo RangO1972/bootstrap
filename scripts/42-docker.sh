@@ -6,7 +6,7 @@ source "$WORKDIR/lib/common.sh"
 log info "Add Docker repository..."
 # Add Docker's official GPG key:
 apt-get update
-apt-get install -y ca-certificates curl
+apt-get install -y ca-certificates
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
