@@ -7,8 +7,11 @@ source "$WORKDIR/lib/common.sh"
 log info "Updating package lists..."
 apt-get update
 
-log info "Installo kernel e header da backports..."
+log info "Installing kernel & header..."
 apt-get install -y -t bookworm-backports linux-image-amd64 linux-headers-amd64
 
-log info "### Installing packages..."
+log info "Installing podman..."
+apt-get install -t bookworm-backports podman
+
+log info "Installing packages..."
 apt-get install -y $(cat /opt/stradcs-bootstrap/configs/packages.txt)
