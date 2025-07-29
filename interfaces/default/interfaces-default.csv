@@ -1,2 +1,2 @@
-OriginalName,Alias,Role,Group
-<AUTO>,dmz,dhcp,
+OriginalName,Alias,Role,Group,Address
+<AUTO>,dmz,dhcp,,
