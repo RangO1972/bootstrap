@@ -31,11 +31,13 @@ log() {
     # Stampa a video
     echo -e "\033[1;37m[${caller_file}]\033[0m $timestamp $color $message"
 
+
     # Scrive nel file giornaliero
     echo "$formatted" >> "$LOGFILE"
 
     # Scrive anche nel journal se disponibile
     if command -v systemd-cat &>/dev/null; then
-        echo "$formatted" | systemd-cat -t "$caller_file" -p "${level,,}"
+        echo "$formatted" | systemd-cat -t "stradcs-bootstrap" -p "${level,,}"
     fi
+
 }
