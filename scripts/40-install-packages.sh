@@ -13,5 +13,5 @@ apt-get install -y -t bookworm-backports linux-image-amd64 linux-headers-amd64
 log info "Installing packages..."
 apt-get install -y $(cat /opt/stradcs-bootstrap/configs/packages.txt)
 
-apt autoremove -y
-
+apt autoremove --purge -y
+apt clean
