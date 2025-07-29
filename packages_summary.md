@@ -23,22 +23,203 @@ _Esempio basato su Debian 12_
 | tailscale         | VPN zero‑config per accesso remoto via rete privata           | `tailscale status` e `tailscale up`                                                        |
 
 ---
+# 📦 Pacchetti installati - Manuale operativo rapido
 
-## 🧪 Esempi di test rapidi
+Un riferimento sintetico ma completo ai comandi più usati per i pacchetti di base installati su Debian 12.
+
+---
+
+## 🔐 sudo
+
+Gestione privilegi amministrativi.
 
 ```bash
-# Verifica che SSH sia attivo
-sudo systemctl status ssh
+sudo -v                 # Aggiorna il timestamp di sudo (autenticazione)
+sudo su                 # Passa a root
+sudo <comando>          # Esegue un comando come root
+```
 
-# Controlla utilizzo banda con iperf3 (server/client)
-iperf3 -s
-iperf3 -c 192.168.1.2
+---
 
-# Mostra regole firewall con nftables
-sudo nft list ruleset
+## 🔐 openssh-server
 
-# Effettua una scansione porte interne
-nmap -sS -Pn localhost
+Server SSH per accesso remoto sicuro.
 
-# Misura ritardo e perdita con mtr (report)
-mtr --report -c 100 debian.org
+```bash
+sudo systemctl status ssh        # Verifica se è attivo
+sudo systemctl start ssh         # Avvia il servizio SSH
+sudo systemctl enable ssh        # Abilita l'avvio automatico
+sudo ufw allow ssh               # (se usi UFW) consenti connessioni SSH
+```
+
+---
+
+## 🌐 wget
+
+Download di file via HTTP/FTP.
+
+```bash
+wget http://example.com/file.iso         # Scarica file
+wget -c http://example.com/file.iso      # Riprende download interrotto
+wget -r -np -k http://example.com/dir/   # Scarica intero sito in locale
+```
+
+---
+
+## 🔧 systemd-resolved
+
+Risoluzione DNS con systemd.
+
+```bash
+resolvectl status                   # Stato generale della risoluzione DNS
+resolvectl query debian.org         # Query DNS manuale
+resolvectl dns                      # Mostra server DNS per ogni interfaccia
+```
+
+---
+
+## 🧬 git
+
+Controllo di versione distribuito.
+
+```bash
+git clone https://repo.git        # Clona un repository
+git status                        # Stato locale
+git add .                         # Aggiunge modifiche all'index
+git commit -m "msg"               # Commit locale
+git push                          # Invia al remoto
+```
+
+---
+
+## 📈 htop
+
+Monitor di sistema interattivo.
+
+```bash
+htop                     # Avvia interfaccia interattiva
+F6                      # Cambia colonna di ordinamento
+F9                      # Termina processo
+```
+
+---
+
+## 🚀 iperf3
+
+Test di velocità di rete TCP/UDP.
+
+```bash
+iperf3 -s                            # Avvia in modalità server
+iperf3 -c <host>                     # Avvia in modalità client verso <host>
+iperf3 -c <host> -u -b 100M          # Test UDP a 100 Mbps
+```
+
+---
+
+## 🔥 nftables
+
+Firewall di nuova generazione (successore di iptables).
+
+```bash
+sudo nft list ruleset               # Mostra tutte le regole attive
+sudo nft flush ruleset              # Cancella tutte le regole
+sudo nft -f /etc/nftables.conf      # Ricarica configurazione
+```
+
+---
+
+## 🔎 dnsutils
+
+Strumenti per debug DNS (incluso `dig`).
+
+```bash
+dig debian.org                      # Query DNS
+dig @8.8.8.8 debian.org             # Query DNS usando server specifico
+```
+
+---
+
+## 🌍 mtr
+
+Traceroute interattivo in tempo reale.
+
+```bash
+mtr google.com                      # Avvio interattivo
+mtr --report google.com             # Report statico
+```
+
+---
+
+## 🌐 traceroute
+
+Tracciamento del percorso dei pacchetti IP.
+
+```bash
+traceroute debian.org               # Traccia il percorso dei pacchetti
+```
+
+---
+
+## 🧩 lsof
+
+Lista file aperti da processi.
+
+```bash
+lsof -i                             # Connessioni di rete attive
+lsof -i :22                         # Processi che usano la porta 22
+```
+
+---
+
+## 📡 tcpdump
+
+Sniffer di pacchetti da terminale.
+
+```bash
+sudo tcpdump -i any -c 10           # Cattura 10 pacchetti su tutte le interfacce
+sudo tcpdump port 53                # Mostra traffico DNS
+```
+
+---
+
+## 🔍 nmap
+
+Scanner di rete e porte.
+
+```bash
+nmap -sS -Pn <host>                 # Scansione SYN senza ping
+nmap -A <host>                      # Rilevamento sistema operativo e servizi
+```
+
+---
+
+## 📊 bmon
+
+Monitor interfaccia di rete in tempo reale.
+
+```bash
+bmon                                # Avvia interfaccia interattiva
+```
+
+---
+
+## 🧠 bpfcc-tools
+
+Strumenti eBPF avanzati per tracciamento kernel (necessita kernel recente).
+
+```bash
+sudo execsnoop                      # Traccia comandi eseguiti
+sudo opensnoop                      # Traccia apertura file
+```
+
+---
+
+## 🌐 tailscale
+
+VPN zero-config con rete mesh automatica.
+
+```bash
+sudo tailscale up                   # Connetti al nodo Tailscale
+tailscale status                    # Mostra stato e peer attivi
+tailscale ip                        # Mostra IP interno Tailscale
+```
