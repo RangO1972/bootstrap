@@ -12,5 +12,6 @@ curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /
 curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list >/dev/null
 
 apt-get update
+log info "Install Tailscale..."
 apt-get install tailscale -y
 
