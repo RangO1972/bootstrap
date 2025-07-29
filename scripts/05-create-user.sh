@@ -4,8 +4,9 @@ set -e
 : "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$WORKDIR/lib/common.sh"
 
-USER="stra"
 
+
+USER="stra"
 log info "Creating user $USER..."
 
 if id "$USER" >/dev/null 2>&1; then
@@ -16,6 +17,9 @@ else
   echo "  passwd $USER"
 fi
 
+log info "Install sudo..."
+apt-get update
+apt-get install -y sudo
+
 log info "Adding $USER to sudo group..."
 usermod -aG sudo "$USER"
-
