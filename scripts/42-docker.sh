@@ -21,6 +21,7 @@ log info "Install Docker..."
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+log info "Add TARGET_USER to docker group..."
 : "${TARGET_USER:=stra}"
 usermod -aG docker $TARGET_USER
 
