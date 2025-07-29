@@ -17,3 +17,11 @@ ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 log info "Enabling systemd services..."
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
+
+log info "Restarting systemd-networkd and systemd-resolved to apply changes..."
+systemctl restart systemd-networkd
+systemctl restart systemd-resolved
+
+log info "Triggering udev to apply .link rules..."
+udevadm trigger --action=add
+
