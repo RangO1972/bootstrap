@@ -4,10 +4,6 @@ set -e
 : "${WORKDIR:=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$WORKDIR/lib/common.sh"
 
-log info "Disabling root SSH login..."
-sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-systemctl restart ssh || true
-
 log info "Removing obsolete packages..."
 apt-get remove -y ifupdown ifenslave resolvconf rpcbind nfs-common avahi-daemon at || true
 
