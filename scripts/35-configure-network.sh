@@ -6,7 +6,7 @@ source "$WORKDIR/lib/common.sh"
 
 log info "Configuring systemd-networkd interfaces..."
 
-CSV_FILE="/opt/stradcs-bootstrap/interfaces.csv"
+CSV_FILE="$WORKDIR/interfaces.csv"
 NETWORK_DIR="/etc/systemd/network"
 
 mkdir -p "$NETWORK_DIR"
