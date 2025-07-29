@@ -26,18 +26,39 @@ fi
 MATCHING_FILES=$(find "$VENDORDIR" -maxdepth 1 -type f -name "${NAMEBASE}*.csv" | sort)
 
 if [[ -z "$MATCHING_FILES" ]]; then
-   echo "No configuration found, using default."
-   cp "$CONFIGDIR/default/interfaces-default.csv" "$WORKDIR/interfaces.csv"
+   echo "No configuration found, using default + auto NIC detection."
+
+   DEFAULT="$CONFIGDIR/default/interfaces-default.csv"
+   OUTFILE="$WORKDIR/interfaces.csv"
+   cp "$DEFAULT" "$OUTFILE"
+
+   # Conta le righe già presenti (escludi intestazione)
+   EXISTING_LINES=$(tail -n +2 "$DEFAULT" | wc -l)
+
+   # Ottieni interfacce reali
+   REAL_IFACES=($(ls /sys/class/net | grep -E '^(en|eth)'))
+   REAL_COUNT=${#REAL_IFACES[@]}
+
+   if [[ "$REAL_COUNT" -gt "$EXISTING_LINES" ]]; then
+      echo "Adding $((REAL_COUNT - EXISTING_LINES)) extra NICs..."
+      idx=$((EXISTING_LINES + 1))
+      for ((i=EXISTING_LINES; i<REAL_COUNT; i++)); do
+         iface="${REAL_IFACES[$i]}"
+         echo "$iface,nic${idx},dhcp,," >> "$OUTFILE"
+         ((idx++))
+      done
+   fi
 
    TEMPLATE="${VENDORDIR}/${NAMEBASE}-$(date +%Y%m%d_%H%M).csv"
    echo "Generating template: $TEMPLATE"
    echo "OriginalName,Alias,Role,Group,Address" > "$TEMPLATE"
    idx=1
-   for iface in $(ls /sys/class/net | grep -E '^(en|eth)'); do
+   for iface in "${REAL_IFACES[@]}"; do
       echo "$iface,nic${idx},dhcp,," >> "$TEMPLATE"
       ((idx++))
    done
-   echo "Template created, edit and rerun."
+
+   echo "Template created. You may edit and rerun if needed."
    exit 0
 fi
 
