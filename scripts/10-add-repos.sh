@@ -23,6 +23,16 @@ FILE="/etc/apt/sources.list.d/bookworm-backports.list"
 ENTRY="deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware"
 grep -qxF "$ENTRY" "$FILE" 2>/dev/null || echo "$ENTRY" > "$FILE"
 
+# Aggiungi il pinning per il kernel dai backports
+PIN_FILE="/etc/apt/preferences.d/kernel-backports"
+if [[ ! -f "$PIN_FILE" ]]; then
+  cat <<EOF > "$PIN_FILE"
+Package: linux-image-amd64
+Pin: release a=bookworm-backports
+Pin-Priority: 990
+EOF
+fi
+
 # Update finale
 log info "Eseguo apt update finale..."
 apt-get update
