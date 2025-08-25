@@ -42,5 +42,5 @@ sudo apt clean
 
 ## 4. Change Host Name
 ```bash
-sudo hostname nuovo-hostname
+sudo hostnamectl set-hostname nuovo-hostname
 ```
