@@ -37,3 +37,10 @@ reboot
 sudo apt autoremove --purge
 sudo apt clean
 ```
+
+
+
+## 4. Change Host Name
+```bash
+sudo hostname nuovo-hostname
+```
