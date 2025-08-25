@@ -44,3 +44,5 @@ sudo apt clean
 ```bash
 sudo hostnamectl set-hostname nuovo-hostname
 ```
+
+Dopo, solo se vuoi essere super‐preciso, dai un’occhiata a /etc/hosts e controlla che la riga con 127.0.1.1 abbia il nuovo nome.
