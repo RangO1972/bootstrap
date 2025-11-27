@@ -3,6 +3,7 @@ set -euo pipefail
 
 # -------------------------------------------------------------
 #  Intelligent Initialization Script (Template / Client)
+#  TTY-SAFE VERSION (works with wget|bash)
 # -------------------------------------------------------------
 
 log()   { echo "[INFO]  $1"; }
@@ -15,22 +16,22 @@ echo "-------------------------------------------------------------"
 echo
 
 # -------------------------------------------------------------
-# 1) Ask for hostname
+# 1) Ask for hostname (using TTY only)
 # -------------------------------------------------------------
-read -rp "Enter new hostname (leave empty for TEMPLATE mode): " NEW_HOSTNAME
+read -rp "Enter new hostname (leave empty for TEMPLATE mode): " NEW_HOSTNAME < /dev/tty
 
 if [[ -z "${NEW_HOSTNAME}" ]]; then
     MODE="TEMPLATE"
-    # Generate template hostname
-    # Example: template-abc123
+
+    # Generate safe template-specific hostname
     RANDOM_SUFFIX=$(tr -dc 'a-z0-9' </dev/urandom | head -c 6)
     TEMPLATE_HOSTNAME="template-${RANDOM_SUFFIX}"
 
-    log "No hostname provided. Switching to TEMPLATE mode."
+    log "No hostname provided → entering TEMPLATE mode."
     log "Generated template hostname: ${TEMPLATE_HOSTNAME}"
 else
     MODE="CLIENT"
-    log "Hostname provided. Switching to CLIENT mode."
+    log "Hostname provided → entering CLIENT mode."
 fi
 
 echo
@@ -40,19 +41,18 @@ echo
 # -------------------------------------------------------------
 if [[ "$MODE" == "TEMPLATE" ]]; then
 
+    # Hostname setup
     log "Setting template hostname: ${TEMPLATE_HOSTNAME}"
     hostnamectl set-hostname "$TEMPLATE_HOSTNAME"
 
-    # Update /etc/hosts
     if grep -q "^127\.0\.1\.1" /etc/hosts; then
         sed -i "s/^127\.0\.1\.1.*/127.0.1.1   ${TEMPLATE_HOSTNAME}/" /etc/hosts
     else
         echo "127.0.1.1   ${TEMPLATE_HOSTNAME}" >> /etc/hosts
     fi
+    log "Template hostname applied."
 
-    log "Hostname updated for template."
-
-    # Light cleanup (identity preserved)
+    # Light cleanup (keep identity intact)
     log "Performing light cleanup..."
     apt clean -y >/dev/null || true
     rm -rf /tmp/* /var/tmp/* || true
@@ -64,10 +64,10 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
     echo "                   TEMPLATE MODE COMPLETE                     "
     echo "-------------------------------------------------------------"
     echo "Template hostname : ${TEMPLATE_HOSTNAME}"
-    echo "SSH keys          : preserved (not regenerated)"
-    echo "machine-id        : preserved"
+    echo "SSH keys          : PRESERVED"
+    echo "machine-id        : PRESERVED"
     echo
-    echo "The system is now ready to be converted into a TEMPLATE."
+    echo "The system is now clean and ready to be converted into a TEMPLATE."
     echo
     exit 0
 fi
@@ -77,8 +77,8 @@ fi
 # -------------------------------------------------------------
 log "Running CLIENT initialization tasks..."
 
-# 1) Set hostname
-log "Setting hostname to: $NEW_HOSTNAME"
+# 1) Hostname
+log "Setting hostname to: ${NEW_HOSTNAME}"
 hostnamectl set-hostname "$NEW_HOSTNAME"
 
 if grep -q "^127\.0\.1\.1" /etc/hosts; then
@@ -97,23 +97,25 @@ log "machine-id regenerated."
 # 3) Remove and regenerate SSH keys
 log "Removing old SSH host keys..."
 rm -f /etc/ssh/ssh_host_*
+
 log "Generating new SSH host keys..."
 dpkg-reconfigure openssh-server >/dev/null
+
 systemctl restart ssh
 log "SSH restarted with fresh keys."
 
-# 4) Clean APT
+# 4) APT cleanup
 log "Cleaning APT..."
 apt clean -y >/dev/null || true
 apt autoremove -y >/dev/null || true
 
-# 5) Clean logs
+# 5) Log cleanup
 log "Cleaning logs..."
 journalctl --rotate
 journalctl --vacuum-time=1s
 
-# 6) Clean temp
-log "Cleaning temp directories..."
+# 6) Temp cleanup
+log "Cleaning temporary directories..."
 rm -rf /tmp/* /var/tmp/* || true
 
 echo
@@ -125,4 +127,5 @@ echo "machine-id     : $(cat /etc/machine-id)"
 echo "SSH status     : $(systemctl is-active ssh)"
 echo
 echo "The system is now fully initialized and ready for use."
+echo "-------------------------------------------------------------"
 echo
