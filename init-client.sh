@@ -3,7 +3,7 @@ set -euo pipefail
 
 trap 'echo "[ERROR] Line $LINENO: \"$BASH_COMMAND\" exited with status $?."' ERR
 
-log() { echo "[INFO]  $1"; }
+log()  { echo "[INFO]  $1"; }
 warn() { echo "[WARN]  $1"; }
 
 echo "-------------------------------------------------------------"
@@ -12,21 +12,22 @@ echo "-------------------------------------------------------------"
 echo
 
 # -------------------------------------------------------------
-# INPUT DEVICE
+# INPUT DEVICE (TTY-safe)
 # -------------------------------------------------------------
 if [[ -e /dev/tty ]]; then
     INPUT_DEV="/dev/tty"
 elif [[ -e /dev/console ]]; then
     INPUT_DEV="/dev/console"
 else
-    INPUT_DEV=""
     warn "No TTY available. Falling back to TEMPLATE mode."
+    INPUT_DEV=""
 fi
 
 # -------------------------------------------------------------
 # HOSTNAME REQUEST (10s timeout)
 # -------------------------------------------------------------
 NEW_HOSTNAME=""
+
 if [[ -n "$INPUT_DEV" ]]; then
     if read -t 10 -rp "Enter hostname (empty = TEMPLATE mode) [10s]: " NEW_HOSTNAME < "$INPUT_DEV"; then
         :
@@ -51,47 +52,48 @@ fi
 
 echo
 
-# =================================================================
-#                       TEMPLATE MODE
-# =================================================================
+# ======================================================================
+#                           TEMPLATE MODE
+# ======================================================================
 if [[ "$MODE" == "TEMPLATE" ]]; then
 
-    log "Setting hostname: $TEMPLATE_HOSTNAME"
+    log "Setting hostname: ${TEMPLATE_HOSTNAME}"
     hostnamectl set-hostname "$TEMPLATE_HOSTNAME"
 
-    # update /etc/hosts
+    # /etc/hosts update
     if grep -q "^127\\.0\\.1\\.1" /etc/hosts; then
-        sed -i "s/^127\\.0\\.1\\.1.*/127.0.1.1   ${TEMPLATE_HOSTNAME}/" /etc/hosts
+        sed -i "s/^127\\.0\\.1\\.1.*/127.0.1.1   template/" /etc/hosts
     else
-        echo "127.0.1.1   ${TEMPLATE_HOSTNAME}" >> /etc/hosts
+        echo "127.0.1.1   template" >> /etc/hosts
     fi
 
-    # ------------------------
-    # Clean machine IDs
-    # ------------------------
-    log "Removing machine-id"
-    rm -f /etc/machine-id /var/lib/dbus/machine-id
+    # -------------------------------
+    # Machine ID reset (CLOUD-STYLE)
+    # -------------------------------
+    log "Resetting machine-id (empty file)"
+    truncate -s 0 /etc/machine-id
+    rm -f /var/lib/dbus/machine-id
 
-    # ------------------------
-    # Clean SSH keys
-    # ------------------------
+    # -------------------------------
+    # SSH KEY removal
+    # -------------------------------
     log "Removing SSH host keys"
     rm -f /etc/ssh/ssh_host_*
 
-    # ------------------------
-    # Clean logs and journald
-    # ------------------------
-    log "Cleaning logs"
-    rm -rf /var/log/* /var/tmp/* /tmp/* || true
+    # -------------------------------
+    # Log cleanup WITHOUT removing dirs
+    # -------------------------------
+    log "Cleaning logs (preserving directories)"
+    find /var/log -type f -delete || true
+    rm -rf /tmp/* /var/tmp/* || true
 
-    # recreate journald dirs (but empty)
-    mkdir -p /var/log/journal
-    mkdir -p /run/log/journal
+    # journald dirs must exist
+    mkdir -p /var/log/journal /run/log/journal
     chmod 2755 /var/log/journal /run/log/journal
 
-    # ------------------------
-    # Clean APT cache
-    # ------------------------
+    # -------------------------------
+    # APT cleanup
+    # -------------------------------
     log "Cleaning APT cache"
     apt clean -y >/dev/null || true
 
@@ -99,15 +101,17 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
     echo "-------------------------------------------------------------"
     echo "                       TEMPLATE READY"
     echo "-------------------------------------------------------------"
-    echo "hostname      : template"
-    echo "machine-id    : REMOVED"
-    echo "ssh keys      : REMOVED"
-    echo "logs          : CLEANED"
+    echo "hostname     : template"
+    echo "machine-id   : EMPTY (systemd will regenerate)"
+    echo "ssh keys     : REMOVED"
+    echo "logs         : CLEANED"
     echo
-    echo "Template can now be converted safely."
+    echo "Template can now be safely converted."
     echo
 
-    # SHUTDOWN DEFAULT YES
+    # ---------------------------------------------------------
+    # SHUTDOWN WITH TIMEOUT (default YES)
+    # ---------------------------------------------------------
     ANSW="y"
     if [[ -n "$INPUT_DEV" ]]; then
         if read -t 10 -rp "Shutdown now? (Y/n) [10s default=Y]: " ANSW < "$INPUT_DEV"; then
@@ -127,9 +131,9 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
     exit 0
 fi
 
-# =================================================================
-#                            CLIENT MODE
-# =================================================================
+# ======================================================================
+#                                CLIENT MODE
+# ======================================================================
 
 log "Setting hostname: $NEW_HOSTNAME"
 hostnamectl set-hostname "$NEW_HOSTNAME"
@@ -140,31 +144,35 @@ else
     echo "127.0.1.1   ${NEW_HOSTNAME}" >> /etc/hosts
 fi
 
-# machine-id handling
-if [[ ! -f /etc/machine-id ]]; then
-    log "machine-id missing → generating new one"
+# -------------------------------------
+# MACHINE-ID (generate only if missing)
+# -------------------------------------
+if [[ ! -s /etc/machine-id ]]; then
+    log "machine-id missing → generating"
     systemd-machine-id-setup
 else
-    log "machine-id already exists → keeping"
+    log "machine-id exists → keeping"
 fi
 
-# SSH keys handling
+# -------------------------------------
+# SSH KEYS (generate only if missing)
+# -------------------------------------
 if compgen -G "/etc/ssh/ssh_host_*" > /dev/null; then
-    log "SSH host keys already exist → keeping"
+    log "SSH keys exist → keeping"
 else
-    log "SSH host keys missing → generating"
+    log "SSH keys missing → generating"
     dpkg-reconfigure openssh-server >/dev/null
     systemctl restart ssh || true
 fi
 
-log "Cleaning system..."
+log "Performing mild cleanup..."
 apt autoremove -y >/dev/null || true
 apt clean -y >/dev/null || true
 rm -rf /tmp/* /var/tmp/* || true
 
 echo
 echo "-------------------------------------------------------------"
-echo "                     CLIENT INITIALIZED"
+echo "                       CLIENT READY"
 echo "-------------------------------------------------------------"
 echo "hostname     : $(hostname)"
 echo "machine-id   : $(cat /etc/machine-id)"
@@ -172,7 +180,9 @@ echo "ssh keys     : OK"
 echo
 echo
 
-# REBOOT DEFAULT YES
+# ---------------------------------------------------------
+# REBOOT WITH TIMEOUT (default YES)
+# ---------------------------------------------------------
 ANSWER="y"
 if [[ -n "$INPUT_DEV" ]]; then
     if read -t 10 -rp "Reboot now? (Y/n) [10s default=Y]: " ANSW < "$INPUT_DEV"; then
