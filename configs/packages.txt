@@ -1,7 +1,5 @@
-openssh-server
 htop
 iperf3
-nftables
 dnsutils
 mtr
 traceroute
@@ -10,4 +8,3 @@ tcpdump
 nmap
 bmon
 bpfcc-tools
-
