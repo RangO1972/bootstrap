@@ -2,9 +2,7 @@
 set -euo pipefail
 
 # -------------------------------------------------------------
-#  Intelligent Initialization Script
-#  - TEMPLATE mode (empty hostname)
-#  - CLIENT mode  (hostname provided)
+#  Intelligent Initialization Script (Template / Client)
 # -------------------------------------------------------------
 
 log()   { echo "[INFO]  $1"; }
@@ -19,11 +17,17 @@ echo
 # -------------------------------------------------------------
 # 1) Ask for hostname
 # -------------------------------------------------------------
-read -rp "Enter new hostname (leave empty to mark as TEMPLATE): " NEW_HOSTNAME
+read -rp "Enter new hostname (leave empty for TEMPLATE mode): " NEW_HOSTNAME
 
 if [[ -z "${NEW_HOSTNAME}" ]]; then
     MODE="TEMPLATE"
+    # Generate template hostname
+    # Example: template-abc123
+    RANDOM_SUFFIX=$(tr -dc 'a-z0-9' </dev/urandom | head -c 6)
+    TEMPLATE_HOSTNAME="template-${RANDOM_SUFFIX}"
+
     log "No hostname provided. Switching to TEMPLATE mode."
+    log "Generated template hostname: ${TEMPLATE_HOSTNAME}"
 else
     MODE="CLIENT"
     log "Hostname provided. Switching to CLIENT mode."
@@ -36,36 +40,40 @@ echo
 # -------------------------------------------------------------
 if [[ "$MODE" == "TEMPLATE" ]]; then
 
-    log "Running TEMPLATE preparation tasks..."
+    log "Setting template hostname: ${TEMPLATE_HOSTNAME}"
+    hostnamectl set-hostname "$TEMPLATE_HOSTNAME"
 
-    # Light cleanup only — do NOT alter identity
-    log "Cleaning APT cache..."
+    # Update /etc/hosts
+    if grep -q "^127\.0\.1\.1" /etc/hosts; then
+        sed -i "s/^127\.0\.1\.1.*/127.0.1.1   ${TEMPLATE_HOSTNAME}/" /etc/hosts
+    else
+        echo "127.0.1.1   ${TEMPLATE_HOSTNAME}" >> /etc/hosts
+    fi
+
+    log "Hostname updated for template."
+
+    # Light cleanup (identity preserved)
+    log "Performing light cleanup..."
     apt clean -y >/dev/null || true
-
-    log "Cleaning temporary directories..."
     rm -rf /tmp/* /var/tmp/* || true
-
-    log "Light log cleanup..."
     journalctl --rotate
     journalctl --vacuum-time=1s
 
     echo
     echo "-------------------------------------------------------------"
-    echo "                   TEMPLATE PREPARATION DONE                  "
+    echo "                   TEMPLATE MODE COMPLETE                     "
     echo "-------------------------------------------------------------"
-    echo "The system has been prepared in TEMPLATE mode:"
-    echo " - Hostname unchanged"
-    echo " - SSH keys preserved"
-    echo " - machine-id preserved"
-    echo " - Light cleanup performed"
+    echo "Template hostname : ${TEMPLATE_HOSTNAME}"
+    echo "SSH keys          : preserved (not regenerated)"
+    echo "machine-id        : preserved"
     echo
-    echo "You can now safely convert this machine into a TEMPLATE."
+    echo "The system is now ready to be converted into a TEMPLATE."
     echo
     exit 0
 fi
 
 # -------------------------------------------------------------
-# CLIENT MODE (FULL RESET)
+# CLIENT MODE
 # -------------------------------------------------------------
 log "Running CLIENT initialization tasks..."
 
@@ -73,7 +81,6 @@ log "Running CLIENT initialization tasks..."
 log "Setting hostname to: $NEW_HOSTNAME"
 hostnamectl set-hostname "$NEW_HOSTNAME"
 
-# Update /etc/hosts
 if grep -q "^127\.0\.1\.1" /etc/hosts; then
     sed -i "s/^127\.0\.1\.1.*/127.0.1.1   ${NEW_HOSTNAME}/" /etc/hosts
 else
@@ -96,27 +103,26 @@ systemctl restart ssh
 log "SSH restarted with fresh keys."
 
 # 4) Clean APT
-log "Cleaning APT cache..."
+log "Cleaning APT..."
 apt clean -y >/dev/null || true
 apt autoremove -y >/dev/null || true
 
 # 5) Clean logs
-log "Cleaning system logs..."
+log "Cleaning logs..."
 journalctl --rotate
 journalctl --vacuum-time=1s
 
-# 6) Clean temp directories
+# 6) Clean temp
 log "Cleaning temp directories..."
 rm -rf /tmp/* /var/tmp/* || true
 
 echo
 echo "-------------------------------------------------------------"
-echo "                  CLIENT INITIALIZATION COMPLETE             "
+echo "                  CLIENT INITIALIZATION COMPLETE              "
 echo "-------------------------------------------------------------"
 echo "Hostname       : $(hostname)"
 echo "machine-id     : $(cat /etc/machine-id)"
 echo "SSH status     : $(systemctl is-active ssh)"
 echo
 echo "The system is now fully initialized and ready for use."
-echo "-------------------------------------------------------------"
 echo
