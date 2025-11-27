@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+trap 'echo "[ERROR] Command failed on line $LINENO: \"$BASH_COMMAND\" (exit code: $?)"' ERR
+
+
 # -------------------------------------------------------------
 #  Intelligent Initialization Script (Template / Client)
 #  TTY-SAFE VERSION (works with wget|bash)
