@@ -45,4 +45,7 @@ sudo apt clean
 sudo hostnamectl set-hostname nuovo-hostname
 ```
 
-Dopo, solo se vuoi essere super‐preciso, dai un’occhiata a /etc/hosts e controlla che la riga con 127.0.1.1 abbia il nuovo nome.
+## 5. Al primo boot dopo la clonazione etc.
+```bash
+wget --no-cache -qO- https://raw.githubusercontent.com/RangO1972/bootstrap/refs/heads/main/init-client.sh | bash
+```
