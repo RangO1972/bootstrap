@@ -147,6 +147,8 @@ rm -f /etc/ssh/ssh_host_*
 rm -f /etc/machine-id
 rm -f /var/lib/dbus/machine-id
 systemd-machine-id-setup
+journalctl --rotate
+journalctl --vacuum-time=1s
 shutdown -h now
 ```
 4. Converti a template
