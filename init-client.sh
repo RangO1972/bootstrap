@@ -13,20 +13,19 @@ echo "-------------------------------------------------------------"
 echo
 
 # -------------------------------------------------------------
-# INPUT DEVICE SELECTION (ALWAYS WORKS IN wget|bash + Serial0)
+# INPUT DEVICE SELECTION (TTY-safe)
 # -------------------------------------------------------------
 if [[ -e /dev/tty ]]; then
     INPUT_DEV="/dev/tty"
 elif [[ -e /dev/console ]]; then
     INPUT_DEV="/dev/console"
 else
-    # no TTY → no prompt → fallback to TEMPLATE
     INPUT_DEV=""
     warn "No TTY available. Falling back to TEMPLATE mode."
 fi
 
 # -------------------------------------------------------------
-# READ HOSTNAME (TTY-safe)
+# READ HOSTNAME
 # -------------------------------------------------------------
 NEW_HOSTNAME=""
 
@@ -37,22 +36,15 @@ else
 fi
 
 # -------------------------------------------------------------
-# MODE SELECTION
+# MODE
 # -------------------------------------------------------------
 if [[ -z "$NEW_HOSTNAME" ]]; then
     MODE="TEMPLATE"
-
-    # generate RANDOM suffix WITHOUT PIPE (no SIGPIPE EVER)
-    BYTES=$(dd if=/dev/urandom bs=12 count=1 2>/dev/null | tr -dc 'a-z0-9')
-    RANDOM_SUFFIX="${BYTES:0:6}"
-
-    TEMPLATE_HOSTNAME="template-${RANDOM_SUFFIX}"
-
-    log "No hostname provided → TEMPLATE MODE"
-    log "Template hostname = ${TEMPLATE_HOSTNAME}"
+    TEMPLATE_HOSTNAME="template"
+    log "TEMPLATE MODE → hostname = template"
 else
     MODE="CLIENT"
-    log "CLIENT MODE → hostname = ${NEW_HOSTNAME}"
+    log "CLIENT MODE → hostname = $NEW_HOSTNAME"
 fi
 
 echo
@@ -71,7 +63,7 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
         echo "127.0.1.1   ${TEMPLATE_HOSTNAME}" >> /etc/hosts
     fi
 
-    log "Light cleanup"
+    log "Light cleanup..."
     apt clean -y >/dev/null || true
     rm -rf /tmp/* /var/tmp/* || true
     journalctl --rotate || true
@@ -81,7 +73,7 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
     echo "-------------------------------------------------------------"
     echo "                   TEMPLATE MODE COMPLETE                     "
     echo "-------------------------------------------------------------"
-    echo "Template hostname : ${TEMPLATE_HOSTNAME}"
+    echo "Template hostname : template"
     echo "SSH keys          : PRESERVED"
     echo "machine-id        : PRESERVED"
     echo
