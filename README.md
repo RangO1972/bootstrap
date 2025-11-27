@@ -47,5 +47,5 @@ sudo hostnamectl set-hostname nuovo-hostname
 
 ## 5. Al primo boot dopo la clonazione etc.
 ```bash
-wget --no-cache -qO- https://raw.githubusercontent.com/RangO1972/bootstrap/refs/heads/main/init-client.sh | bash
+wget --no-cache -qO- https://raw.githubusercontent.com/RangO1972/bootstrap/main/init-client.sh | bash
 ```
