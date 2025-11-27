@@ -8,7 +8,7 @@ warn()  { echo "[WARN]  $1"; }
 error() { echo "[ERROR] $1" >&2; exit 1; }
 
 echo "-------------------------------------------------------------"
-echo "        Intelligent System Initialization / Reset Script      "
+echo "        Intelligent System Initialization / Reset Script"
 echo "-------------------------------------------------------------"
 echo
 
@@ -21,30 +21,36 @@ elif [[ -e /dev/console ]]; then
     INPUT_DEV="/dev/console"
 else
     INPUT_DEV=""
-    warn "No TTY available. Falling back to TEMPLATE mode."
+    warn "No TTY available. Automatic TEMPLATE mode."
 fi
 
 # -------------------------------------------------------------
-# READ HOSTNAME
+# HOSTNAME REQUEST (timeout 10s)
 # -------------------------------------------------------------
 NEW_HOSTNAME=""
 
 if [[ -n "$INPUT_DEV" ]]; then
-    read -rp "Enter new hostname (leave empty for TEMPLATE mode): " NEW_HOSTNAME < "$INPUT_DEV"
+    if read -t 10 -rp "Enter new hostname (empty = TEMPLATE mode) [10s]: " NEW_HOSTNAME < "$INPUT_DEV"; then
+        :
+    else
+        echo
+        warn "Timeout — switching to TEMPLATE mode."
+        NEW_HOSTNAME=""
+    fi
 else
     NEW_HOSTNAME=""
 fi
 
 # -------------------------------------------------------------
-# MODE
+# MODE SELECTION
 # -------------------------------------------------------------
 if [[ -z "$NEW_HOSTNAME" ]]; then
     MODE="TEMPLATE"
     TEMPLATE_HOSTNAME="template"
-    log "TEMPLATE MODE → hostname = template"
+    log "TEMPLATE MODE selected."
 else
     MODE="CLIENT"
-    log "CLIENT MODE → hostname = $NEW_HOSTNAME"
+    log "CLIENT MODE — hostname = $NEW_HOSTNAME"
 fi
 
 echo
@@ -63,7 +69,7 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
         echo "127.0.1.1   ${TEMPLATE_HOSTNAME}" >> /etc/hosts
     fi
 
-    log "Light cleanup..."
+    log "Performing light cleanup..."
     apt clean -y >/dev/null || true
     rm -rf /tmp/* /var/tmp/* || true
     journalctl --rotate || true
@@ -71,14 +77,31 @@ if [[ "$MODE" == "TEMPLATE" ]]; then
 
     echo
     echo "-------------------------------------------------------------"
-    echo "                   TEMPLATE MODE COMPLETE                     "
+    echo "                   TEMPLATE MODE COMPLETE"
     echo "-------------------------------------------------------------"
     echo "Template hostname : template"
     echo "SSH keys          : PRESERVED"
     echo "machine-id        : PRESERVED"
     echo
-    echo "System is ready for template conversion."
-    echo
+
+    # Ask for shutdown (default YES, timeout 10s)
+    ANSW="y"
+
+    if [[ -n "$INPUT_DEV" ]]; then
+        if read -t 10 -rp "Shutdown now? (Y/n) [default=Y, 10s]: " ANSW < "$INPUT_DEV"; then
+            :
+        else
+            echo
+            warn "Timeout — performing default shutdown."
+            ANSW="y"
+        fi
+    fi
+
+    if [[ "${ANSW,,}" == "y" ]]; then
+        log "Shutting down..."
+        shutdown -h now
+    fi
+
     exit 0
 fi
 
@@ -94,16 +117,16 @@ else
     echo "127.0.1.1   ${NEW_HOSTNAME}" >> /etc/hosts
 fi
 
-log "Resetting machine-id"
+log "Resetting machine-id..."
 rm -f /etc/machine-id /var/lib/dbus/machine-id
 systemd-machine-id-setup
 
-log "Regenerating SSH host keys"
+log "Regenerating SSH host keys..."
 rm -f /etc/ssh/ssh_host_*
 dpkg-reconfigure openssh-server >/dev/null
 systemctl restart ssh || true
 
-log "Cleaning system"
+log "Cleaning system..."
 apt clean -y >/dev/null || true
 apt autoremove -y >/dev/null || true
 journalctl --rotate || true
@@ -112,12 +135,29 @@ rm -rf /tmp/* /var/tmp/* || true
 
 echo
 echo "-------------------------------------------------------------"
-echo "                  CLIENT INITIALIZATION COMPLETE              "
+echo "                  CLIENT INITIALIZATION COMPLETE"
 echo "-------------------------------------------------------------"
 echo "Hostname       : $(hostname)"
 echo "machine-id     : $(cat /etc/machine-id)"
 echo "SSH status     : $(systemctl is-active ssh)"
 echo
-echo "Client ready."
-echo "-------------------------------------------------------------"
-echo
+
+# Ask for reboot (default YES, timeout 10s)
+ANSWER="y"
+
+if [[ -n "$INPUT_DEV" ]]; then
+    if read -t 10 -rp "Reboot now? (Y/n) [default=Y, 10s]: " ANSW < "$INPUT_DEV"; then
+        :
+    else
+        echo
+        warn "Timeout — performing default reboot."
+        ANSW="y"
+    fi
+fi
+
+if [[ "${ANSW,,}" == "y" ]]; then
+    log "Rebooting..."
+    reboot
+fi
+
+exit 0
